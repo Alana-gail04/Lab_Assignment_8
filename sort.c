@@ -1,20 +1,106 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 int extraMemoryAllocated;
 
 // implements heap sort
 // extraMemoryAllocated counts bytes of memory allocated
-void heapSort(int arr[], int n)
-{
+void swap(int *a, int *b) {
+	int temp = *a;
+	*a = *b;
+	*b = temp; 
+}
+
+void heapify(int arr[], int n, int i){
+	int largest = i;
+	int l = 2 * i + 1;
+	int r = 2 * i + 2;
+
+	if (l < n && arr[l] > arr[largest])
+		largest = l;
+	
+	if (r < n && arr[r] > arr[largest])
+		largest = r; 
+	
+	if (largest != i){
+		swap(&arr[i], &arr[largest]);
+
+		heapify(arr, n, largest); 
+	}
+}
+
+void heapSort(int arr[], int n){
+	extraMemoryAllocated = 0; 
+
+	for(int i = n/2 - 1; i >= 0; i--)
+		heapify(arr, n, i);
+	
+	for(int i = n - 1; i > 0; i--){
+		swap(&arr[0], &arr[i]);
+
+		heapify(arr, i, 0);
+	}
 }
 
 
 // implement merge sort
 // extraMemoryAllocated counts bytes of extra memory allocated
-void mergeSort(int pData[], int l, int r)
-{
+
+void merge (int pData[], int l, int m, int r){
+	int i,j,k;
+
+	int n1 = m - l + 1;
+	int n2 = r - m; 
+	
+	int *L = (int*) malloc(n1*sizeof(int));
+	int *R = (int*) malloc(n2*sizeof(int));
+
+	for (i = 0; i < n1; i++)
+		L[i] = pData[l + i];
+	for (j = 0; j < n2; j++)
+		R[j] = pData[m + 1 + j];
+
+	i = 0;
+	j = 0;
+	k = l;
+
+	while (i < n1 && j < n2){
+		if (L[i] <= R[j]){
+			pData[k] = L[i];
+			i++;
+		}
+		else{
+			pData[k] = R[j];
+			j++;
+		}
+		k++;
+	}
+
+	while (i < n1){
+		pData[k] = L[i];
+		i++;
+		k++;
+	}
+
+	while (j < n2){
+		pData[k] = R[j];
+		j++;
+		k++;
+	}
+	free(L);
+	free(R);
+	extraMemoryAllocated += sizeof(R) + sizeof(L);
+}
+
+void mergeSort(int pData[], int l, int r){
+	if (l < r){
+		int m = l + (r - l)/ 2;
+		mergeSort(pData, l, m);
+		mergeSort(pData, m + 1, r);
+		merge(pData, l, m, r);
+	}
 }
 
 // parses input file to an integer array
@@ -53,9 +139,12 @@ void printArray(int pData[], int dataSz)
 {
 	int i, sz = dataSz - 100;
 	printf("\tData:\n\t");
-	for (i=0;i<100;++i)
-	{
+	for (i=0;i<100;++i){
 		printf("%d ",pData[i]);
+		if(i >= dataSz - 1){
+			printf("\n\n");
+			return;
+		}
 	}
 	printf("\n\t");
 	
